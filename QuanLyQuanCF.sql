@@ -400,3 +400,22 @@ insert into  THANHTOANCHITIET values('M023','HD006',null,'012',2)
 
 
 go
+
+alter table Mon
+add Mon_status varchar(1)
+
+alter table Ban
+add Ban_status varchar(1)
+
+alter table NhanVien
+add NV_status varchar(1)
+
+
+update Mon
+set Mon_status = 0
+
+update Ban
+set Ban_status = 0
+
+update NhanVien
+set NV_status = 0
