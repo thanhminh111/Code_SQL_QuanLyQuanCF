@@ -1,4 +1,5 @@
 ﻿
+
 --Tính thành tiền của Thanh toán chi tiết
 create trigger tgCountMoney
 on THANHTOANCHITIET
@@ -85,10 +86,122 @@ begin
 end
 go
 
---hiển thị bàn
-create proc pGetTable
+
+--khi xóa món thì tự động đổi thành update set status = 1 đối với món xóa
+create trigger tgDeleteMon
+on Mon
+instead of delete
 as
 begin
-	select * from BAN 
+	declare @MaMon varchar(10)
+	set @MaMon = (select MaMon from deleted)
+
+	update MON
+	set Mon_Status = 1
+	where MaMon = @MaMon
+
 end
 go
+
+--Mã món tăng tự động
+alter function fMaMonNew()
+returns varchar(10)
+as
+begin
+	declare @MaMonNew varchar(10), @max int,@temp varchar(10)
+	set @max = (select max(cast(MaMon as int)) from MON)
+	set @temp = cast((@max+1) as varchar)
+	set @MaMonNew = REPLICATE('0',10 - len(@temp))+@temp
+
+	return @MaMonNew
+end
+
+print dbo.fMaMonNew()
+go
+
+insert into MON values( dbo.fMaMonNew() ,N'Món thêm',123456, 0)
+
+go
+
+--mã bàn tăng tự động
+alter function fMaBanNew()
+returns varchar(10)
+as 
+begin
+	declare @MaBanNew varchar(10), @max int,@temp varchar(10)
+	set @max = (select max(cast(MaBan as int)) from BAN)
+	set @temp = cast((@max+1) as varchar)
+	set @MaBanNew = REPLICATE('0',10 - len(@temp))+@temp
+
+	return @MaBanNew
+end
+go
+
+print dbo.fMaBanNew()
+go
+
+insert into BAN values(dbo.fMaBanNew() , N'Đã đạt trước',0)
+go
+
+--xóa bàn
+create trigger tgDeleteBan
+on BAN
+instead of delete
+as
+begin
+	declare @MaBan varchar(10)
+	set @MaBan = (select MaBan from deleted)
+
+	update BAN
+	set Ban_Status = 1
+	where MaBan = @MaBan
+
+end
+go
+
+delete BAN where MaBan = '19'
+select * from BAN where Ban_Status = 0
+go
+
+
+--mã nhân viên tăng tự động
+create function fMaNVNew()
+returns varchar(10)
+as
+begin
+	declare @MaNVNew varchar(10), @max int,@temp varchar(10)
+	set @max = (select max(cast(MaNV as int)) from NHANVIEN)
+	set @temp = cast((@max+1) as varchar)
+	set @MaNVNew = REPLICATE('0',10 - len(@temp))+@temp
+
+	return @MaNVNew
+end
+
+print dbo.fMaNVNew()
+go
+select* from NHANVIEN 
+
+insert into NHANVIEN values(dbo.fMaNVNew(), N'MINHHhH', null, '0346588820', 'NV', 0)
+update NHANVIEN set TENNV = N'', SDT='', LoaiNV ='' where MaNV = ''
+go
+
+--xóa nhân viên
+create trigger tgDeleteNV
+on NHANVIEN
+instead of delete
+as
+begin
+	declare @MaNV varchar(10)
+	set @MaNV = (select MaNV from deleted)
+
+	update NHANVIEN
+	set NV_Status = 1
+	where MaNV = @MaNV  
+
+end
+go
+
+delete NHANVIEN where MaNV = '0000000013'
+ 
+select * from TaiKhoan join NhanVien on NHANVIEN.MaNV = TaiKhoan.MaNV
+
